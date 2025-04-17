@@ -8,11 +8,11 @@ DEFAULT={
 NB_JOUEURS=10
 NB_TOURS=10
 PORTEFEUILLE_INIT=1000
-PROPORTION_STRAT=[
-    ('gentil', 0.2), 
-    ('mechant', 0.2), 
-    ('aleatoire', 0.2), 
-    ('copieur', 0.2), 
-    ('trader', 0.2),
-]
+PROPORTION_STRAT={
+    'gentil': 0.2, 
+    'mechant': 0.2, 
+    'aleatoire': 0.2, 
+    'copieur': 0.2, 
+    'trader': 0.2,
+}
 NB_ECHANGES=10

@@ -1,8 +1,10 @@
 import random
 import settings
 from collections import namedtuple
+from tkinter import DoubleVar
 
 Transaction = namedtuple("Transaction", ["round", "details"])
+Resume = namedtuple("Resume", ["name", "details"])
 # === JOUEUR ===
 
 class Joueur:
@@ -59,25 +61,26 @@ class Partie:
 
     def proportionStrategies(self, liste_proportion_strategie):
         liste_strategies = []
-        normalize = sum([element[1] for element in liste_proportion_strategie])
+        normalize = sum(liste_proportion_strategie.values())
         if normalize != 1:
-            liste_proportion_strategie = [(element[0], element[1]/normalize) for element in liste_proportion_strategie]
-        for element in liste_proportion_strategie: 
-            for nb_element in range(round(element[1]*100)):
-                liste_strategies.append(element[0])
+            for element in liste_proportion_strategie.keys():
+                liste_proportion_strategie[element] /= normalize
+        for strat, nombre in liste_proportion_strategie.items(): 
+            for _ in range(round(self.nombre_joueurs*nombre)):
+                liste_strategies.append(strat)
+        while len(liste_strategies) < self.nombre_joueurs:
+            liste_strategies.append(max(liste_proportion_strategie, key=liste_proportion_strategie.get))
         return liste_strategies
 
     def initJoueurs(self, nombre_joueurs, portefeuille_depart):
         liste_joueurs = []
         for index_joueur in range(nombre_joueurs):
-            nouveau_joueur = Joueur(index_joueur, random.choice(self.liste_strategies), portefeuille_depart)
+            nouveau_joueur = Joueur(index_joueur, self.liste_strategies[index_joueur], portefeuille_depart)
             liste_joueurs.append(nouveau_joueur)
         return liste_joueurs
 
     def echange(self, joueur1, joueur2):
-        echange = Echange(joueur1, joueur2, self.parametres, settings.NB_ECHANGES)
-        print(echange.historique)
-        self.liste_transaction.append(echange.historique)
+        return Echange(joueur1, joueur2, self.nb_echanges, self.parametres)
 
     def __str__(self):
         return f"< Partie | {self.nombre_joueurs} Joueurs | {self.portefeuille_init}$ >"
@@ -86,14 +89,14 @@ class Partie:
 # === Echange ===
 
 class Echange:
-    def __init__(self, joueur1, joueur2, parametres, nb_echanges):
+    def __init__(self, joueur1, joueur2, nb_echanges, parametres=settings.DEFAULT):
         self.joueurs = (joueur1.identifiant, joueur2.identifiant)
         self.parametres = parametres
         self.gain_sans_triche = self.parametres["gain_sans_triche"]
         self.gain_une_triche = self.parametres["gain_une_triche"]
         self.gain_deux_triche = self.parametres["gain_deux_triche"]
         self.mise = self.parametres["mise"]
-        self.historique = self.jeu(joueur1, joueur2, nb_echanges)
+        self.historique = Resume(name=self.joueurs, details=self.jeu(joueur1, joueur2, nb_echanges))
 
     def jeu(self, joueur1, joueur2, nb_echanges):
         historique = []
@@ -134,7 +137,6 @@ class Echange:
         joueur1.historique_transaction.append(Transaction(round=round_num, details=transaction))
         joueur2.historique_transaction.append(Transaction(round=round_num, details=transaction))
         return historique
-
 
 
 # === Stratégie ===
